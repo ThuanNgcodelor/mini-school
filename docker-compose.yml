@@ -1,0 +1,133 @@
+version: '3.8'
+
+x-spring-boot-common: &spring-boot-common
+  networks: [ -network ]
+  restart: unless-stopped
+  environment:
+    # OPTIMIZED: Max performance - Heap up to 384MB
+    JAVA_TOOL_OPTIONS: "-Xms128m -Xmx384m -XX:+UseG1GC -XX:MaxGCPauseMillis=100 -XX:+UseStringDeduplication"
+  deploy:
+    resources:
+      limits:
+        # CPU unlocked
+        memory: 640M
+      reservations:
+        memory: 256M
+
+services:
+  # ==========================================
+  # INFRASTRUCTURE SERVICES
+  # ==========================================
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: shopee
+      MYSQL_USER: sa
+      MYSQL_PASSWORD: Thuan@417
+    # OPTIMIZED: Max performance DB
+    command: --default-authentication-plugin=mysql_native_password --max_connections=300 --innodb-buffer-pool-size=256M
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks: [ vibe-network ]
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    restart: unless-stopped
+    ports:
+      - "8085:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: mysql
+    networks: [ vibe-network ]
+    deploy:
+      resources:
+        limits:
+          memory: 64M # Đã tối ưu
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks: [ vibe-network ]
+    deploy:
+      resources:
+        limits:
+          memory: 256M # Increased for better caching
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    container_name: zookeeper
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: "2181"
+      ZOOKEEPER_TICK_TIME: "2000"
+      KAFKA_OPTS: "-Xmx128m -Xms64m"
+    ports:
+      - "2181:2181"
+    networks: [ vibe-network ]
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: kafka
+    restart: unless-stopped
+    depends_on: [ zookeeper ]
+    environment:
+      KAFKA_BROKER_ID: "1"
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,EXTERNAL://0.0.0.0:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      # OPTIMIZED: Minimized heap
+      KAFKA_HEAP_OPTS: "-Xmx384m -Xms128m"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    ports:
+      - "9092:9092"
+      - "9094:9094"
+    networks: [ vibe-network ]
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    restart: unless-stopped
+    depends_on: [ kafka ]
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+      JAVA_OPTS: "-Xmx192m"
+    ports:
+      - "9090:8080"
+    networks: [ vibe-network ]
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
