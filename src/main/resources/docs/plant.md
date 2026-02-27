@@ -216,19 +216,65 @@ exam_scores
 └── UNIQUE(exam_id, student_id)
 ```
 
-### Bảng `payments` (Học phí)
+### Bảng `tuition_records` (Sổ học phí theo tháng — AUTO-GENERATED)
 ```
-payments
+tuition_records
 ├── id (PK)
-├── student_id (FK → students.id)
-├── classroom_id (FK → classrooms.id)
-├── amount (DECIMAL)
-├── payment_month (VD: "2025-03")
-├── payment_date (nullable, ngày thực trả)
-├── method (ENUM: CASH, TRANSFER, MOMO)
-├── status (ENUM: PAID, PENDING, OVERDUE)
+├── enrollment_id (FK → enrollments.id)
+├── month (INT, 1-12) ← tháng thứ mấy kể từ khi vào lớp
+├── month_label (VD: "Tháng 1", "Tháng 2")
+├── amount (DECIMAL) ← copy từ classrooms.tuition_fee lúc tạo
+├── status (ENUM: UNPAID, PAID)
+├── paid_at (nullable, datetime — lúc GV bấm xác nhận)
+├── confirmed_by (FK → users.id, nullable — GV nào xác nhận)
 ├── note (nullable)
-└── created_at
+├── created_at
+└── UNIQUE(enrollment_id, month) ← mỗi HS chỉ có 1 record/tháng/lớp
+```
+
+#### 💡 CÁCH HOẠT ĐỘNG HỌC PHÍ:
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  KHI HS VÀO LỚP (enrollment)                                   │
+│  → Hệ thống TỰ ĐỘNG tạo 12 tuition_records (Tháng 1→12)      │
+│  → Tất cả status = UNPAID                                      │
+│  → amount = classrooms.tuition_fee (lấy từ lớp)               │
+│                                                                 │
+│  KHI HS ĐÓNG TIỀN                                               │
+│  → GV vào trang "Học phí" của lớp                              │
+│  → Thấy bảng: HS | T1 | T2 | T3 | T4 | ...                   │
+│  → Mỗi ô là ✅ (đã đóng) hoặc ❌ (chưa đóng)                  │
+│  → GV click vào ❌ → chuyển thành ✅ → lưu paid_at + GV        │
+│                                                                 │
+│  ĐÓNG NHIỀU THÁNG CÙNG LÚC                                     │
+│  → GV chọn checkbox nhiều tháng (T1, T2, T3)                  │
+│  → Bấm "Xác nhận đã đóng"                                     │
+│  → Hệ thống update cả 3 records → status = PAID               │
+│                                                                 │
+│  ĐÓNG HÔM NAY T1, MAI T2                                       │
+│  → Hôm nay: GV confirm T1 → paid_at = ngày hôm nay           │
+│  → Mai: GV confirm T2 → paid_at = ngày mai                    │
+│  → Mỗi record có paid_at riêng → biết chính xác đóng ngày nào │
+│                                                                 │
+│  ⚠️ KHÔNG CẦN NHẬP SỐ TIỀN (lấy từ lớp)                       │
+│  ⚠️ KHÔNG CẦN CHỌN PHƯƠNG THỨC (đơn giản hóa)                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### 🖥️ UI GV XEM HỌC PHÍ (payment-status.html):
+```
+┌──────────────────────────────────────────────────────────────┐
+│  Lớp: Toán 10A          Học phí: 500,000đ / tháng           │
+│  Tổng thu: 5,000,000đ   Còn nợ: 1,000,000đ                 │
+├────────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬────────┤
+│ Họ tên │ T1  │ T2  │ T3  │ T4  │ T5  │ T6  │ ... │ Action │
+├────────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼────────┤
+│ Văn A  │ ✅  │ ✅  │ ✅  │ ❌  │ ❌  │ ❌  │     │ [Chọn] │
+│ Thị B  │ ✅  │ ✅  │ ❌  │ ❌  │ ❌  │ ❌  │     │ [Chọn] │
+│ Văn C  │ ✅  │ ✅  │ ✅  │ ✅  │ ✅  │ ✅  │     │ Đủ ✅  │
+└────────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴────────┘
+│ [Chọn] → popup chọn tháng cần xác nhận → [Xác nhận đã đóng] │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ### Sơ đồ quan hệ tổng quát:
@@ -268,7 +314,7 @@ com.example.minischool
 │   ├── Enrollment.java
 │   ├── Exam.java
 │   ├── ExamScore.java
-│   └── Payment.java
+│   └── TuitionRecord.java
 │
 ├── repository/
 │   ├── UserRepository.java
@@ -280,7 +326,7 @@ com.example.minischool
 │   ├── EnrollmentRepository.java
 │   ├── ExamRepository.java
 │   ├── ExamScoreRepository.java
-│   └── PaymentRepository.java
+│   └── TuitionRecordRepository.java
 │
 ├── service/
 │   ├── AuthService.java           # Đăng ký/đăng nhập
@@ -289,7 +335,7 @@ com.example.minischool
 │   ├── StudentService.java        # Tạo/tìm HS, dedup
 │   ├── EnrollmentService.java     # Gán HS vào lớp
 │   ├── ExamService.java           # Tạo bài thi + nhập điểm
-│   ├── PaymentService.java        # Ghi nhận thanh toán
+│   ├── TuitionService.java        # Auto-generate records + xác nhận thanh toán
 │   └── DashboardService.java      # Thống kê
 │
 ├── controller/
@@ -304,14 +350,13 @@ com.example.minischool
 │   ├── StudentCreateDTO.java      # Khi GV thêm HS
 │   ├── ClassroomDTO.java
 │   ├── ExamScoreDTO.java
-│   ├── PaymentDTO.java
+│   ├── TuitionStatusDTO.java      # Bảng tổng hợp học phí
 │   └── DashboardStats.java
 │
 ├── enums/
 │   ├── RoleName.java              # ADMIN, TEACHER, STUDENT
 │   ├── ExamType.java              # QUIZ_15, TEST_45, MIDTERM, FINAL
-│   ├── PaymentStatus.java         # PAID, PENDING, OVERDUE
-│   ├── PaymentMethod.java         # CASH, TRANSFER, MOMO
+│   ├── TuitionStatus.java         # UNPAID, PAID
 │   └── EnrollmentStatus.java      # ACTIVE, DROPPED, FINISHED
 │
 ├── util/
@@ -359,8 +404,7 @@ resources/templates/
 │   ├── create-exam.html             # Tạo bài thi
 │   ├── enter-scores.html            # Nhập điểm
 │   ├── score-report.html            # Bảng điểm tổng hợp
-│   ├── payment-status.html          # Ai đóng / chưa đóng
-│   └── record-payment.html          # Ghi nhận thanh toán
+│   └── payment-status.html          # Bảng ✅/❌ + nút xác nhận
 │
 ├── student/
 │   ├── my-classes.html              # Lớp đang học
@@ -396,14 +440,14 @@ resources/templates/
 |---|-----------|-------|
 | 1 | Dashboard | Số lớp, số HS, bài thi, HS nợ tiền |
 | 2 | Tạo lớp | Đặt tên, chọn môn, lịch học, học phí → hệ thống tạo mã lớp |
-| 3 | Thêm HS | Nhập tên + SĐT → hệ thống tạo account hoặc link HS đã có |
+| 3 | Thêm HS | Nhập tên + SĐT → hệ thống tạo account + auto tạo 12 tuition_records |
 | 4 | In tài khoản | In danh sách username/password cho HS mới |
 | 5 | Xem lớp | DS HS, sĩ số X/max, thông tin liên lạc |
 | 6 | Tạo bài thi | KT 15p, 45p, giữa kỳ, cuối kỳ |
 | 7 | Nhập điểm | Nhập điểm cho từng HS theo bài thi |
 | 8 | Bảng điểm | Bảng tổng hợp: ĐTB, max, min, ranking |
-| 9 | Xem học phí | Ai đóng rồi, ai chưa, trễ bao lâu |
-| 10 | Ghi nhận TT | Bấm "đã đóng" khi HS nộp tiền |
+| 9 | Xem học phí | Bảng ✅/❌ theo tháng, tổng thu/nợ |
+| 10 | Xác nhận đóng | Chọn HS + chọn tháng → bấm xác nhận (1 hoặc nhiều tháng) |
 
 ### 🟢 STUDENT (Xem thông tin)
 
@@ -467,8 +511,8 @@ GET  /teacher/exams/{id}/scores          → Form nhập/xem điểm
 POST /teacher/exams/{id}/scores          → Lưu điểm
 GET  /teacher/classes/{id}/score-report  → Bảng điểm tổng hợp
 
-GET  /teacher/classes/{id}/payments      → Tình trạng đóng tiền
-POST /teacher/payments/{id}/confirm      → Xác nhận đã thanh toán
+GET  /teacher/classes/{id}/payments      → Bảng học phí ✅/❌ theo tháng
+POST /teacher/classes/{id}/payments/confirm → Xác nhận đóng (body: studentId + months[])
 ```
 
 ### Student
@@ -541,5 +585,13 @@ GET  /student/payments                   → Tình trạng học phí
 
 6. **Security**: Mỗi endpoint check quyền sở hữu.
    VD: `/teacher/classes/5` → check class #5 có thuộc GV đang login không.
+
+7. **Học phí tự động**:
+   - Khi HS enroll vào lớp → auto tạo 12 `tuition_records` (T1→T12), status = UNPAID
+   - Amount lấy từ `classrooms.tuition_fee` → KHÔNG cần nhập thủ công
+   - GV chỉ cần bấm xác nhận → update status = PAID + ghi paid_at
+   - Đóng nhiều tháng 1 lúc: POST với `months: [1, 2, 3]` → update hàng loạt
+   - Đóng T1 hôm nay, T2 ngày mai: mỗi lần confirm ghi `paid_at` riêng
+   - Có thể **hủy xác nhận** (undo) nếu GV bấm nhầm
 
 ---
