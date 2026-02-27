@@ -1,0 +1,40 @@
+/* Custom styles for EduManager */
+
+body {
+    font-family: "Lexend", sans-serif;
+    background-color: #f9fafb;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.sticky-col {
+    position: sticky;
+    left: 0;
+    z-index: 10;
+}
+
+.table-shadow {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.modal-overlay {
+    background-color: rgba(13, 18, 28, 0.7);
+    backdrop-filter: blur(4px);
+}
+
+/* Active nav item filled icon */
+.nav-active .material-symbols-outlined {
+    font-variation-settings: 'FILL' 1;
+}
+
+/* Icon filled style */
+.icon-filled {
+    font-variation-settings: 'FILL' 1;
+}

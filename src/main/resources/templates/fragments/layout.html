@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!-- Fragment: head -->
+<head th:fragment="head(pageTitle)">
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${pageTitle} + ' | EduManager'">EduManager</title>
+    <!-- TailwindCSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0a47c2',
+                    },
+                    fontFamily: {
+                        display: ['Lexend', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <!-- Material Symbols -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <!-- Custom CSS -->
+    <link th:href="@{/css/styles.css}" rel="stylesheet"/>
+</head>
+
+<!-- Fragment: sidebar -->
+<div th:fragment="sidebar(activePage)">
+    <aside class="w-64 bg-white border-r border-slate-200 flex-shrink-0 flex flex-col h-screen fixed lg:static z-20">
+        <div class="h-20 flex items-center px-6 border-b border-slate-200">
+            <div class="flex items-center gap-3 text-primary">
+                <div class="size-8">
+                    <svg class="w-full h-full" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6 6H42L36 24L42 42H6L12 24L6 6Z" fill="currentColor"></path>
+                    </svg>
+                </div>
+                <h2 class="text-xl font-bold tracking-tight text-slate-900">EduManager</h2>
+            </div>
+        </div>
+        <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-2">
+            <!-- Dashboard -->
+            <a th:href="@{/dashboard}"
+               th:classappend="${activePage == 'dashboard'} ? 'bg-primary/10 text-primary nav-active' : 'text-slate-600 hover:bg-slate-50 hover:text-primary'"
+               class="flex items-center gap-4 px-4 py-3 rounded-lg transition-colors group">
+                <span class="material-symbols-outlined group-hover:text-primary transition-colors">dashboard</span>
+                <span th:classappend="${activePage == 'dashboard'} ? 'font-bold' : 'font-medium'" class="text-lg">Tổng quan</span>
+            </a>
+            <!-- Lớp học -->
+            <a th:href="@{/dashboard}"
+               th:classappend="${activePage == 'class'} ? 'bg-primary/10 text-primary nav-active' : 'text-slate-600 hover:bg-slate-50 hover:text-primary'"
+               class="flex items-center gap-4 px-4 py-3 rounded-lg transition-colors group">
+                <span class="material-symbols-outlined group-hover:text-primary transition-colors">school</span>
+                <span th:classappend="${activePage == 'class'} ? 'font-bold' : 'font-medium'" class="text-lg">Lớp học</span>
+            </a>
+            <!-- Học sinh -->
+            <a th:href="@{/students}"
+               th:classappend="${activePage == 'students'} ? 'bg-primary/10 text-primary nav-active' : 'text-slate-600 hover:bg-slate-50 hover:text-primary'"
+               class="flex items-center gap-4 px-4 py-3 rounded-lg transition-colors group">
+                <span class="material-symbols-outlined group-hover:text-primary transition-colors">groups</span>
+                <span th:classappend="${activePage == 'students'} ? 'font-bold' : 'font-medium'" class="text-lg">Học sinh</span>
+            </a>
+            <!-- Học phí -->
+            <a th:href="@{/tuition}"
+               th:classappend="${activePage == 'tuition'} ? 'bg-primary/10 text-primary nav-active' : 'text-slate-600 hover:bg-slate-50 hover:text-primary'"
+               class="flex items-center gap-4 px-4 py-3 rounded-lg transition-colors group">
+                <span class="material-symbols-outlined group-hover:text-primary transition-colors">payments</span>
+                <span th:classappend="${activePage == 'tuition'} ? 'font-bold' : 'font-medium'" class="text-lg">Học phí</span>
+            </a>
+            <!-- Divider + Cài đặt -->
+            <div>
+                <div class="border-t border-slate-200 my-4"></div>
+                <a th:href="@{/settings}"
+                   th:classappend="${activePage == 'settings'} ? 'bg-primary/10 text-primary nav-active' : 'text-slate-600 hover:bg-slate-50 hover:text-primary'"
+                   class="flex items-center gap-4 px-4 py-3 rounded-lg transition-colors group">
+                    <span class="material-symbols-outlined group-hover:text-primary transition-colors">settings</span>
+                    <span th:classappend="${activePage == 'settings'} ? 'font-bold' : 'font-medium'" class="text-lg">Cài đặt</span>
+                </a>
+            </div>
+        </nav>
+    </aside>
+</div>
+
+<!-- Fragment: header -->
+<div th:fragment="header(pageLabel)">
+    <header class="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-6 lg:px-10 flex-shrink-0">
+        <h1 class="text-2xl font-bold text-slate-800 hidden lg:block" th:text="${pageLabel}">Dashboard</h1>
+        <div class="flex items-center gap-6 ml-auto">
+            <button class="relative p-2 text-slate-500 hover:text-primary transition-colors">
+                <span class="material-symbols-outlined">notifications</span>
+                <span class="absolute top-1.5 right-1.5 size-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+            </button>
+            <div class="flex items-center gap-3 pl-6 border-l border-slate-200">
+                <img alt="Avatar" class="size-10 rounded-full ring-2 ring-primary/20"
+                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQaY-RHsQNqK-jTSY7_foXs5BlWqJE8_PaevspgGYOq1v1JzC2eizhEydU-a6XQRFVBp7nh_wLpyxN7DofPzaa6qfQfgCn0aFcGrZufG1lc87r1Rx5qkDdgpuBJbwMrTKQ_VBvRD5qNPLYvqdN9xEOIz6ZPG5_y6LqqWdmqTvoSirCvuuxYajMHgVNaLOBm2JUOKZTTE2HPgamX4seKwjizlJw4n2tZxOGFvDmclhGbmRE7FJHPmRCdjCI_FJ99gS4_UTcQpePbdw"/>
+                <div class="hidden md:block">
+                    <p class="text-base font-bold text-slate-900">Thầy Hùng</p>
+                    <p class="text-sm text-slate-500">Giáo viên Toán</p>
+                </div>
+            </div>
+            <a th:href="@{/login}" class="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors text-base font-medium">
+                <span class="material-symbols-outlined text-xl">logout</span>
+                <span class="hidden md:inline">Đăng xuất</span>
+            </a>
+        </div>
+    </header>
+</div>
+
+</html>

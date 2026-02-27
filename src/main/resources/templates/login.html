@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+
+<head th:replace="~{fragments/layout :: head('Đăng nhập')}"></head>
+
+<body>
+    <div class="bg-white text-slate-900 font-display min-h-screen flex flex-col">
+        <!-- Header -->
+        <header
+            class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 bg-white px-6 lg:px-10 py-4 shadow-sm">
+            <div class="flex items-center gap-4 text-slate-900">
+                <div class="size-8 text-primary">
+                    <svg class="w-full h-full" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6 6H42L36 24L42 42H6L12 24L6 6Z" fill="currentColor"></path>
+                    </svg>
+                </div>
+                <h2 class="text-xl font-bold leading-tight tracking-tight">Quản lý Lớp học</h2>
+            </div>
+            <div class="hidden md:flex flex-1 justify-end gap-8 items-center">
+                <div class="flex items-center gap-9">
+                    <a class="text-slate-600 text-sm font-medium hover:text-primary transition-colors" href="#">Trang
+                        chủ</a>
+                    <a class="text-slate-600 text-sm font-medium hover:text-primary transition-colors" href="#">Tính
+                        năng</a>
+                    <a class="text-slate-600 text-sm font-medium hover:text-primary transition-colors" href="#">Trợ
+                        giúp</a>
+                </div>
+                <a th:href="@{/register}"
+                    class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-6 bg-primary/10 hover:bg-primary/20 text-primary text-sm font-bold leading-normal tracking-wide transition-colors">
+                    <span class="truncate">Đăng ký</span>
+                </a>
+            </div>
+        </header>
+
+        <!-- Main content -->
+        <main class="flex-grow flex items-center justify-center p-4 py-12">
+            <div class="w-full max-w-xl bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                <div class="px-8 pt-10 pb-6 text-center">
+                    <h1 class="text-3xl lg:text-4xl font-black text-slate-900 mb-3 tracking-tight">Đăng nhập Giáo viên
+                    </h1>
+                    <p class="text-slate-500 text-lg">Tiếp tục quản lý lớp học của bạn</p>
+                </div>
+                <form class="px-6 lg:px-12 py-6 flex flex-col gap-6" th:action="@{/login}" method="post">
+                    <div class="flex flex-col gap-2">
+                        <label class="text-slate-900 text-base font-bold" for="phone">Số điện thoại</label>
+                        <input
+                            class="w-full rounded-lg border border-slate-300 bg-slate-50 text-slate-900 focus:border-primary focus:ring-2 focus:ring-primary/20 h-14 px-4 text-lg placeholder:text-slate-400 transition-all"
+                            id="phone" name="phone" placeholder="0912 345 678" type="tel" />
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="text-slate-900 text-base font-bold" for="password">Mật khẩu</label>
+                        <div class="relative">
+                            <input
+                                class="w-full rounded-lg border border-slate-300 bg-slate-50 text-slate-900 focus:border-primary focus:ring-2 focus:ring-primary/20 h-14 pl-4 pr-12 text-lg placeholder:text-slate-400 transition-all"
+                                id="password" name="password" placeholder="******" type="password" />
+                            <button
+                                class="absolute right-0 top-0 h-full px-4 text-slate-400 hover:text-primary transition-colors flex items-center justify-center"
+                                type="button" onclick="togglePassword('password', this)">
+                                <span class="material-symbols-outlined">visibility_off</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between mt-1">
+                        <div class="flex items-center gap-2">
+                            <input class="size-5 rounded border-slate-300 text-primary focus:ring-primary/20"
+                                id="remember" type="checkbox" />
+                            <label class="text-base text-slate-600 font-medium select-none" for="remember">
+                                Ghi nhớ đăng nhập
+                            </label>
+                        </div>
+                        <a class="text-primary hover:text-blue-700 font-bold text-base hover:underline" href="#">
+                            Quên mật khẩu?
+                        </a>
+                    </div>
+                    <a th:href="@{/dashboard}"
+                        class="mt-4 w-full bg-primary hover:bg-blue-700 text-white font-bold text-lg h-14 rounded-lg shadow-lg shadow-blue-500/20 active:scale-[0.99] transition-all duration-200 flex items-center justify-center gap-2">
+                        <span>Đăng nhập ngay</span>
+                        <span class="material-symbols-outlined">arrow_forward</span>
+                    </a>
+                </form>
+                <div class="px-8 pb-10 pt-2 text-center">
+                    <p class="text-base text-slate-600">
+                        Chưa có tài khoản?
+                        <a class="text-primary font-bold hover:underline ml-1 text-lg" th:href="@{/register}">Đăng ký
+                            tại đây</a>
+                    </p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Bottom gradient bar -->
+        <div class="h-2 w-full bg-gradient-to-r from-blue-400 via-primary to-blue-600"></div>
+    </div>
+
+    <script>
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const icon = btn.querySelector('.material-symbols-outlined');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.textContent = 'visibility';
+            } else {
+                input.type = 'password';
+                icon.textContent = 'visibility_off';
+            }
+        }
+    </script>
+</body>
+
+</html>

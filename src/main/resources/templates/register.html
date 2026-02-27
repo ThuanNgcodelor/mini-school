@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+
+<head th:replace="~{fragments/layout :: head('Đăng ký')}"></head>
+
+<body>
+    <div class="bg-white text-slate-900 font-display min-h-screen flex flex-col">
+        <!-- Header -->
+        <header
+            class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 bg-white px-6 lg:px-10 py-4 shadow-sm">
+            <div class="flex items-center gap-4 text-slate-900">
+                <div class="size-8 text-primary">
+                    <svg class="w-full h-full" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6 6H42L36 24L42 42H6L12 24L6 6Z" fill="currentColor"></path>
+                    </svg>
+                </div>
+                <h2 class="text-xl font-bold leading-tight tracking-tight">Quản lý Lớp học</h2>
+            </div>
+            <div class="hidden md:flex flex-1 justify-end gap-8 items-center">
+                <div class="flex items-center gap-9">
+                    <a class="text-slate-600 text-sm font-medium hover:text-primary transition-colors" href="#">Trang
+                        chủ</a>
+                    <a class="text-slate-600 text-sm font-medium hover:text-primary transition-colors" href="#">Tính
+                        năng</a>
+                    <a class="text-slate-600 text-sm font-medium hover:text-primary transition-colors" href="#">Trợ
+                        giúp</a>
+                </div>
+                <a th:href="@{/login}"
+                    class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-6 bg-primary/10 hover:bg-primary/20 text-primary text-sm font-bold leading-normal tracking-wide transition-colors">
+                    <span class="truncate">Đăng nhập</span>
+                </a>
+            </div>
+        </header>
+
+        <!-- Main content -->
+        <main class="flex-grow flex items-center justify-center p-4 py-12">
+            <div class="w-full max-w-2xl bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                <div class="px-8 pt-10 pb-6 text-center">
+                    <h1 class="text-3xl lg:text-4xl font-black text-slate-900 mb-3 tracking-tight">Đăng ký Giáo viên
+                    </h1>
+                    <p class="text-slate-500 text-lg">Tạo tài khoản để bắt đầu quản lý lớp học hiệu quả hơn</p>
+                </div>
+                <form class="px-6 lg:px-12 py-6 flex flex-col gap-6" th:action="@{/register}" method="post">
+                    <div class="flex flex-col gap-2">
+                        <label class="text-slate-900 text-base font-bold" for="fullname">Họ và tên</label>
+                        <input
+                            class="w-full rounded-lg border border-slate-300 bg-slate-50 text-slate-900 focus:border-primary focus:ring-2 focus:ring-primary/20 h-14 px-4 text-lg placeholder:text-slate-400 transition-all"
+                            id="fullname" name="fullname" placeholder="Nguyễn Văn A" type="text" />
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="text-slate-900 text-base font-bold" for="phone">Số điện thoại</label>
+                        <input
+                            class="w-full rounded-lg border border-slate-300 bg-slate-50 text-slate-900 focus:border-primary focus:ring-2 focus:ring-primary/20 h-14 px-4 text-lg placeholder:text-slate-400 transition-all"
+                            id="phone" name="phone" placeholder="0912 345 678" type="tel" />
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="flex flex-col gap-2">
+                            <label class="text-slate-900 text-base font-bold" for="password">Mật khẩu</label>
+                            <div class="relative">
+                                <input
+                                    class="w-full rounded-lg border border-slate-300 bg-slate-50 text-slate-900 focus:border-primary focus:ring-2 focus:ring-primary/20 h-14 pl-4 pr-12 text-lg placeholder:text-slate-400 transition-all"
+                                    id="password" name="password" placeholder="******" type="password" />
+                                <button
+                                    class="absolute right-0 top-0 h-full px-4 text-slate-400 hover:text-primary transition-colors flex items-center justify-center"
+                                    type="button" onclick="togglePassword('password', this)">
+                                    <span class="material-symbols-outlined">visibility_off</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label class="text-slate-900 text-base font-bold" for="confirm-password">Xác nhận mật
+                                khẩu</label>
+                            <div class="relative">
+                                <input
+                                    class="w-full rounded-lg border border-slate-300 bg-slate-50 text-slate-900 focus:border-primary focus:ring-2 focus:ring-primary/20 h-14 pl-4 pr-12 text-lg placeholder:text-slate-400 transition-all"
+                                    id="confirm-password" name="confirmPassword" placeholder="******" type="password" />
+                                <button
+                                    class="absolute right-0 top-0 h-full px-4 text-slate-400 hover:text-primary transition-colors flex items-center justify-center"
+                                    type="button" onclick="togglePassword('confirm-password', this)">
+                                    <span class="material-symbols-outlined">visibility_off</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-2 mt-2">
+                        <label class="text-primary text-base font-bold flex items-center gap-2" for="invite-code">
+                            <span class="material-symbols-outlined text-xl">vpn_key</span>
+                            Mã mời (Bắt buộc)
+                        </label>
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <span class="material-symbols-outlined text-primary/60">key</span>
+                            </div>
+                            <input
+                                class="w-full rounded-lg border-2 border-primary/20 bg-primary/5 text-slate-900 focus:border-primary focus:ring-0 h-16 pl-12 px-4 text-xl font-medium tracking-wide placeholder:text-primary/40 transition-all"
+                                id="invite-code" name="inviteCode" placeholder="NHAP-MA-MOI" type="text" />
+                        </div>
+                        <p class="text-sm text-slate-500 pl-1">Nhập mã được cung cấp bởi nhà trường hoặc quản trị viên.
+                        </p>
+                    </div>
+                    <div class="flex items-start gap-3 mt-2">
+                        <input class="mt-1.5 size-5 rounded border-slate-300 text-primary focus:ring-primary/20"
+                            id="terms" type="checkbox" />
+                        <label class="text-base text-slate-600" for="terms">
+                            Tôi đồng ý với <a class="text-primary hover:underline font-medium" href="#">Điều khoản sử
+                                dụng</a> và <a class="text-primary hover:underline font-medium" href="#">Chính sách bảo
+                                mật</a>.
+                        </label>
+                    </div>
+                    <a th:href="@{/dashboard}"
+                        class="mt-4 w-full bg-primary hover:bg-blue-700 text-white font-bold text-lg h-14 rounded-lg shadow-lg shadow-blue-500/20 active:scale-[0.99] transition-all duration-200 flex items-center justify-center gap-2">
+                        <span>Hoàn tất đăng ký</span>
+                        <span class="material-symbols-outlined">arrow_forward</span>
+                    </a>
+                </form>
+                <div class="px-8 pb-10 pt-2 text-center">
+                    <p class="text-base text-slate-600">
+                        Đã có tài khoản?
+                        <a class="text-primary font-bold hover:underline ml-1 text-lg" th:href="@{/login}">Đăng nhập tại
+                            đây</a>
+                    </p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Bottom gradient bar -->
+        <div class="h-2 w-full bg-gradient-to-r from-blue-400 via-primary to-blue-600"></div>
+    </div>
+
+    <script>
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const icon = btn.querySelector('.material-symbols-outlined');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.textContent = 'visibility';
+            } else {
+                input.type = 'password';
+                icon.textContent = 'visibility_off';
+            }
+        }
+    </script>
+</body>
+
+</html>
