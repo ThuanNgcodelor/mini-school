@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+
+<head th:replace="~{fragments/layout :: head('Quản lý Môn học')}"></head>
+
+<body>
+    <div class="bg-white text-slate-900 font-display min-h-screen flex overflow-hidden">
+        <div th:replace="~{fragments/layout :: sidebar('subjects')}"></div>
+        <div class="flex-1 flex flex-col h-screen overflow-hidden">
+            <div th:replace="~{fragments/layout :: header('Quản lý Môn học')}"></div>
+            <main class="flex-1 overflow-y-auto p-6 lg:p-10 bg-gray-50">
+                <div class="max-w-5xl mx-auto space-y-8">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div>
+                            <h2 class="text-3xl font-black text-slate-900 mb-2">Quản lý Môn học</h2>
+                            <p class="text-lg text-slate-600">Thêm, sửa, xóa các môn học trong hệ thống</p>
+                        </div>
+                        <button onclick="openCreate()"
+                            class="bg-primary hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl shadow-lg flex items-center gap-2 cursor-pointer transition-all active:scale-95">
+                            <span class="material-symbols-outlined">add_circle</span> Thêm môn học
+                        </button>
+                    </div>
+                    <div id="msg" class="hidden p-4 rounded-xl font-medium flex items-center gap-2"></div>
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200">
+                                    <th class="py-4 px-6 text-sm font-bold uppercase">#</th>
+                                    <th class="py-4 px-6 text-sm font-bold uppercase">Tên môn</th>
+                                    <th class="py-4 px-6 text-sm font-bold uppercase">Mã</th>
+                                    <th class="py-4 px-6 text-sm font-bold uppercase">Mô tả</th>
+                                    <th class="py-4 px-6 text-sm font-bold uppercase text-right">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="subjectTable" class="divide-y divide-slate-200">
+                                <tr>
+                                    <td colspan="5" class="py-12 text-center text-slate-400">Đang tải...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- Modal -->
+                <div id="modal"
+                    class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+                    <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl">
+                        <div class="p-6 border-b flex justify-between items-center">
+                            <h3 class="text-xl font-bold" id="modalTitle">Thêm môn học</h3>
+                            <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600"><span
+                                    class="material-symbols-outlined">close</span></button>
+                        </div>
+                        <form id="subjectForm" class="p-6 space-y-4">
+                            <input type="hidden" id="editId" />
+                            <div><label class="block font-bold mb-1">Tên môn *</label><input id="fName"
+                                    class="w-full h-12 px-4 rounded-lg border border-slate-300 bg-slate-50" required />
+                            </div>
+                            <div><label class="block font-bold mb-1">Mã môn *</label><input id="fCode"
+                                    class="w-full h-12 px-4 rounded-lg border border-slate-300 bg-slate-50 uppercase font-mono"
+                                    placeholder="MATH" required /></div>
+                            <div><label class="block font-bold mb-1">Mô tả</label><input id="fDesc"
+                                    class="w-full h-12 px-4 rounded-lg border border-slate-300 bg-slate-50" /></div>
+                            <button type="submit"
+                                class="w-full h-12 bg-primary text-white font-bold rounded-lg cursor-pointer"
+                                id="submitBtn">Thêm</button>
+                        </form>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script th:replace="~{fragments/layout :: authScript}"></script>
+    <script>
+        function showMsg(text, ok) {
+            const el = document.getElementById('msg');
+            el.className = ok ? 'p-4 rounded-xl font-medium flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700' : 'p-4 rounded-xl font-medium flex items-center gap-2 bg-red-50 border border-red-200 text-red-700';
+            el.innerHTML = `<span class="material-symbols-outlined">${ok ? 'check_circle' : 'error'}</span>${text}`;
+            setTimeout(() => el.classList.add('hidden'), 3000);
+        }
+        function openCreate() { document.getElementById('editId').value = ''; document.getElementById('fName').value = ''; document.getElementById('fCode').value = ''; document.getElementById('fDesc').value = ''; document.getElementById('modalTitle').textContent = 'Thêm môn học'; document.getElementById('submitBtn').textContent = 'Thêm'; document.getElementById('modal').classList.remove('hidden'); }
+        function openEdit(s) { document.getElementById('editId').value = s.id; document.getElementById('fName').value = s.name; document.getElementById('fCode').value = s.code; document.getElementById('fDesc').value = s.description || ''; document.getElementById('modalTitle').textContent = 'Sửa môn học'; document.getElementById('submitBtn').textContent = 'Cập nhật'; document.getElementById('modal').classList.remove('hidden'); }
+        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+
+        let subjects = [];
+        async function loadSubjects() {
+            const res = await fetch('/api/admin/subjects');
+            const data = await res.json();
+            subjects = data.data || [];
+            const tbody = document.getElementById('subjectTable');
+            if (subjects.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="py-12 text-center text-slate-400">Chưa có môn học nào</td></tr>'; return; }
+            tbody.innerHTML = subjects.map((s, i) => `<tr class="hover:bg-slate-50">
+                <td class="py-4 px-6 text-slate-500">${i + 1}</td>
+                <td class="py-4 px-6 font-bold">${s.name}</td>
+                <td class="py-4 px-6 font-mono font-medium text-primary">${s.code}</td>
+                <td class="py-4 px-6 text-slate-500">${s.description || '—'}</td>
+                <td class="py-4 px-6 text-right space-x-2">
+                    <button onclick='openEdit(${JSON.stringify(s)})' class="text-primary hover:bg-primary/10 px-3 py-1 rounded-lg text-sm font-medium cursor-pointer">Sửa</button>
+                    <button onclick="delSubject(${s.id})" class="text-red-500 hover:bg-red-50 px-3 py-1 rounded-lg text-sm font-medium cursor-pointer">Xóa</button>
+                </td></tr>`).join('');
+        }
+
+        document.getElementById('subjectForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            const id = document.getElementById('editId').value;
+            const body = { name: document.getElementById('fName').value, code: document.getElementById('fCode').value, description: document.getElementById('fDesc').value };
+            const url = id ? '/api/admin/subjects/' + id : '/api/admin/subjects';
+            const method = id ? 'PUT' : 'POST';
+            const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+            const data = await res.json();
+            closeModal();
+            showMsg(data.message, data.success);
+            loadSubjects();
+        });
+
+        async function delSubject(id) {
+            if (!confirm('Xóa môn học này?')) return;
+            const res = await fetch('/api/admin/subjects/' + id, { method: 'DELETE' });
+            const data = await res.json();
+            showMsg(data.message, data.success);
+            loadSubjects();
+        }
+
+        document.addEventListener('DOMContentLoaded', loadSubjects);
+    </script>
+</body>
+
+</html>

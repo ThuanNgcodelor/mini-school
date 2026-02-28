@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+
+<head th:replace="~{fragments/layout :: head('Thêm học sinh')}"></head>
+
+<body>
+    <div class="bg-white text-slate-900 font-display min-h-screen flex overflow-hidden">
+        <div th:replace="~{fragments/layout :: sidebar('class')}"></div>
+        <div class="flex-1 flex flex-col h-screen overflow-hidden">
+            <div th:replace="~{fragments/layout :: header('Thêm học sinh')}"></div>
+            <main class="flex-1 overflow-y-auto p-6 lg:p-10 bg-gray-50">
+                <div class="max-w-4xl mx-auto space-y-8">
+                    <div>
+                        <a id="backLink" class="text-primary font-medium flex items-center gap-1 mb-2 hover:underline">
+                            <span class="material-symbols-outlined text-lg">arrow_back</span> Quay lại lớp
+                        </a>
+                        <h2 class="text-3xl font-black text-slate-900 mb-2">Thêm học sinh vào lớp</h2>
+                        <p class="text-lg text-slate-600">Nhập từng học sinh rồi bấm thêm, hoặc nhập nhanh hàng loạt</p>
+                    </div>
+
+                    <!-- Tab switching -->
+                    <div class="flex gap-2 bg-white rounded-xl p-1 border border-slate-200 w-fit">
+                        <button onclick="switchTab('single')" id="tabSingle"
+                            class="px-5 py-2 rounded-lg font-bold text-base bg-primary text-white cursor-pointer transition-all">Thêm
+                            từng HS</button>
+                        <button onclick="switchTab('batch')" id="tabBatch"
+                            class="px-5 py-2 rounded-lg font-bold text-base text-slate-600 hover:bg-slate-100 cursor-pointer transition-all">Nhập
+                            nhanh (hàng loạt)</button>
+                    </div>
+
+                    <!-- SINGLE MODE: Form nhập từng HS -->
+                    <div id="singleMode" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div><label class="block font-bold mb-1 text-slate-700">Họ tên học sinh <span
+                                            class="text-red-500">*</span></label>
+                                    <input id="sName"
+                                        class="w-full h-12 px-4 rounded-lg border border-slate-300 bg-slate-50 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                        placeholder="Nguyễn Văn A" />
+                                </div>
+                                <div><label class="block font-bold mb-1 text-slate-700">Số điện thoại HS <span
+                                            class="text-red-500">*</span></label>
+                                    <input id="sPhone" type="tel"
+                                        class="w-full h-12 px-4 rounded-lg border border-slate-300 bg-slate-50 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                        placeholder="0901234567" />
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div><label class="block font-bold mb-1 text-slate-700">Tên phụ huynh</label>
+                                    <input id="sParentName"
+                                        class="w-full h-12 px-4 rounded-lg border border-slate-300 bg-slate-50 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                        placeholder="Nguyễn Văn B (ba/mẹ)" />
+                                </div>
+                                <div><label class="block font-bold mb-1 text-slate-700">SĐT phụ huynh</label>
+                                    <input id="sParentPhone" type="tel"
+                                        class="w-full h-12 px-4 rounded-lg border border-slate-300 bg-slate-50 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                        placeholder="0987654321" />
+                                </div>
+                            </div>
+                            <div id="singleList" class="hidden">
+                                <p class="font-bold text-slate-700 mb-2">Danh sách chờ thêm:</p>
+                                <div id="pendingList" class="space-y-2"></div>
+                            </div>
+                            <div class="flex gap-3">
+                                <button onclick="addToPending()"
+                                    class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-6 py-3 rounded-xl flex items-center gap-2 cursor-pointer transition-all">
+                                    <span class="material-symbols-outlined">add</span> Thêm vào danh sách
+                                </button>
+                                <button onclick="submitAll()" id="submitSingleBtn"
+                                    class="bg-primary hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl shadow-lg flex items-center gap-2 cursor-pointer transition-all active:scale-95">
+                                    <span class="material-symbols-outlined">person_add</span> Gửi tất cả vào lớp
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BATCH MODE: Nhập nhanh textarea -->
+                    <div id="batchMode" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                        <div class="space-y-4">
+                            <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 flex gap-3">
+                                <span class="material-symbols-outlined text-primary">tips_and_updates</span>
+                                <div class="text-sm">
+                                    <p class="font-bold mb-1">Hướng dẫn nhập nhanh:</p>
+                                    <p>Mỗi dòng 1 học sinh, dùng dấu <code
+                                            class="bg-white px-2 py-0.5 rounded font-bold">|</code> để phân cách các
+                                        thông tin:</p>
+                                    <p class="mt-1 font-mono text-xs bg-white p-2 rounded border border-blue-100">Họ tên
+                                        HS | SĐT HS | Tên phụ huynh | SĐT phụ huynh</p>
+                                    <p class="mt-1">Ví dụ:</p>
+                                    <p class="font-mono text-xs bg-white p-2 rounded border border-blue-100">Nguyễn Văn
+                                        A | 0901234567 | Nguyễn Văn B | 0987654321<br>Trần Thị C | 0912345678</p>
+                                    <p class="mt-1 text-slate-500">⚡ Tên và SĐT phụ huynh có thể bỏ trống</p>
+                                </div>
+                            </div>
+                            <textarea id="batchInput" rows="8"
+                                class="w-full p-4 rounded-xl border border-slate-300 bg-slate-50 font-mono text-base focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
+                                placeholder="Nguyễn Văn A | 0901234567 | Nguyễn Văn B | 0987654321&#10;Trần Thị C | 0912345678&#10;Lê Văn D | 0923456789 | Lê Thị E | 0934567890"></textarea>
+                            <button onclick="submitBatch()" id="submitBatchBtn"
+                                class="bg-primary hover:bg-blue-700 text-white font-bold text-lg px-8 py-3 rounded-xl shadow-lg flex items-center gap-2 cursor-pointer transition-all active:scale-95">
+                                <span class="material-symbols-outlined">person_add</span> Thêm tất cả vào lớp
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Results -->
+                    <div id="results"
+                        class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="p-6 border-b border-slate-200 flex justify-between items-center">
+                            <h3 class="text-xl font-bold flex items-center gap-2">
+                                <span class="material-symbols-outlined text-emerald-500">check_circle</span> Kết quả
+                                thêm học sinh
+                            </h3>
+                            <button onclick="window.print()"
+                                class="flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 font-medium cursor-pointer">
+                                <span class="material-symbols-outlined text-lg">print</span> In tài khoản
+                            </button>
+                        </div>
+                        <div class="p-4 bg-amber-50 border-b border-amber-100 text-amber-800 text-sm flex gap-2">
+                            <span class="material-symbols-outlined text-amber-500">warning</span>
+                            <span><strong>Quan trọng:</strong> Hãy ghi lại hoặc in mật khẩu bên dưới. Mật khẩu chỉ hiện
+                                1 lần duy nhất!</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-200">
+                                        <th class="py-3 px-6 text-sm font-bold uppercase">Họ tên</th>
+                                        <th class="py-3 px-6 text-sm font-bold uppercase">SĐT (Tên đăng nhập)</th>
+                                        <th class="py-3 px-6 text-sm font-bold uppercase">Mật khẩu</th>
+                                        <th class="py-3 px-6 text-sm font-bold uppercase">Phụ huynh</th>
+                                        <th class="py-3 px-6 text-sm font-bold uppercase">Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="resultBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script th:replace="~{fragments/layout :: authScript}"></script>
+    <script>
+        const classId = window.location.pathname.split('/').filter(Boolean)[2];
+        document.getElementById('backLink').href = '/teacher/classes/' + classId;
+
+        let pendingStudents = [];
+
+        function switchTab(tab) {
+            document.getElementById('singleMode').classList.toggle('hidden', tab !== 'single');
+            document.getElementById('batchMode').classList.toggle('hidden', tab !== 'batch');
+            document.getElementById('tabSingle').className = tab === 'single'
+                ? 'px-5 py-2 rounded-lg font-bold text-base bg-primary text-white cursor-pointer transition-all'
+                : 'px-5 py-2 rounded-lg font-bold text-base text-slate-600 hover:bg-slate-100 cursor-pointer transition-all';
+            document.getElementById('tabBatch').className = tab === 'batch'
+                ? 'px-5 py-2 rounded-lg font-bold text-base bg-primary text-white cursor-pointer transition-all'
+                : 'px-5 py-2 rounded-lg font-bold text-base text-slate-600 hover:bg-slate-100 cursor-pointer transition-all';
+        }
+
+        function addToPending() {
+            const name = document.getElementById('sName').value.trim();
+            const phone = document.getElementById('sPhone').value.trim();
+            if (!name || !phone) { alert('Vui lòng nhập họ tên và SĐT'); return; }
+
+            pendingStudents.push({
+                fullName: name,
+                phone: phone,
+                parentName: document.getElementById('sParentName').value.trim(),
+                parentPhone: document.getElementById('sParentPhone').value.trim()
+            });
+            renderPending();
+            // Clear form
+            document.getElementById('sName').value = '';
+            document.getElementById('sPhone').value = '';
+            document.getElementById('sParentName').value = '';
+            document.getElementById('sParentPhone').value = '';
+            document.getElementById('sName').focus();
+        }
+
+        function removePending(i) {
+            pendingStudents.splice(i, 1);
+            renderPending();
+        }
+
+        function renderPending() {
+            const el = document.getElementById('pendingList');
+            const container = document.getElementById('singleList');
+            if (pendingStudents.length === 0) { container.classList.add('hidden'); return; }
+            container.classList.remove('hidden');
+            el.innerHTML = pendingStudents.map((s, i) => `
+                <div class="flex items-center justify-between bg-slate-50 px-4 py-2 rounded-lg">
+                    <div>
+                        <span class="font-bold">${s.fullName}</span>
+                        <span class="text-slate-500 ml-2">${s.phone}</span>
+                        ${s.parentName ? `<span class="text-slate-400 ml-2 text-sm">| PH: ${s.parentName} ${s.parentPhone || ''}</span>` : ''}
+                    </div>
+                    <button onclick="removePending(${i})" class="text-red-500 hover:bg-red-50 p-1 rounded cursor-pointer"><span class="material-symbols-outlined text-lg">close</span></button>
+                </div>`).join('');
+        }
+
+        async function submitAll() {
+            if (pendingStudents.length === 0) { alert('Chưa thêm HS nào vào danh sách'); return; }
+            await sendStudents(pendingStudents);
+            pendingStudents = [];
+            renderPending();
+        }
+
+        async function submitBatch() {
+            const raw = document.getElementById('batchInput').value.trim();
+            if (!raw) { alert('Vui lòng nhập danh sách'); return; }
+            const lines = raw.split('\n').filter(l => l.trim());
+            const students = lines.map(line => {
+                const parts = line.split('|').map(p => p.trim());
+                return {
+                    fullName: parts[0] || '',
+                    phone: parts[1] || '',
+                    parentName: parts[2] || '',
+                    parentPhone: parts[3] || ''
+                };
+            }).filter(s => s.fullName && s.phone);
+            if (students.length === 0) { alert('Không tìm thấy HS hợp lệ. Dùng dấu | phân cách: Họ tên | SĐT | Tên PH | SĐT PH'); return; }
+            await sendStudents(students);
+        }
+
+        async function sendStudents(students) {
+            const res = await fetch('/api/teacher/classes/' + classId + '/add-students', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ students })
+            });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('results').classList.remove('hidden');
+                const tbody = document.getElementById('resultBody');
+                tbody.innerHTML = data.data.map(a => {
+                    const bgColor = a.status === 'CREATED' ? 'bg-emerald-50 text-emerald-700' : a.status === 'ENROLLED' ? 'bg-blue-50 text-blue-700' : 'bg-orange-50 text-orange-700';
+                    const statusText = a.status === 'CREATED' ? '✅ Tạo mới' : a.status === 'ENROLLED' ? '🔗 Gán vào lớp' : '⚠️ Bỏ qua';
+                    return `<tr class="border-b border-slate-100">
+                        <td class="py-3 px-6 font-bold">${a.fullName}</td>
+                        <td class="py-3 px-6 font-mono">${a.phone}</td>
+                        <td class="py-3 px-6 font-mono font-bold ${a.password ? 'text-red-600 bg-red-50' : 'text-slate-400'}">${a.password || '(giữ nguyên)'}</td>
+                        <td class="py-3 px-6 text-sm text-slate-500">${a.parentName || '—'}</td>
+                        <td class="py-3 px-6"><span class="px-2 py-1 rounded-full text-sm font-bold ${bgColor}">${statusText}</span>
+                            <span class="text-xs text-slate-400 block mt-1">${a.message || ''}</span></td>
+                    </tr>`;
+                }).join('');
+            } else { alert(data.message); }
+        }
+    </script>
+</body>
+
+</html>

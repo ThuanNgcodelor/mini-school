@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+
+<head th:replace="~{fragments/layout :: head('Lớp đang học')}"></head>
+
+<body>
+    <div class="bg-white text-slate-900 font-display min-h-screen flex overflow-hidden">
+        <div th:replace="~{fragments/layout :: sidebar('class')}"></div>
+        <div class="flex-1 flex flex-col h-screen overflow-hidden">
+            <div th:replace="~{fragments/layout :: header('Lớp đang học')}"></div>
+            <main class="flex-1 overflow-y-auto p-6 lg:p-10 bg-gray-50">
+                <div class="max-w-7xl mx-auto space-y-8">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div>
+                            <h2 class="text-3xl font-black text-slate-900 mb-2">Lớp đang học</h2>
+                            <p class="text-lg text-slate-600">Các lớp bạn đang tham gia</p>
+                        </div>
+                        <a href="/student/join-class"
+                            class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-lg px-6 py-3 rounded-xl shadow-lg flex items-center gap-3 transition-all active:scale-95">
+                            <span class="material-symbols-outlined">add_circle</span> Tham gia lớp mới
+                        </a>
+                    </div>
+                    <div id="classList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="col-span-full text-center py-12 text-slate-400"><span
+                                class="material-symbols-outlined text-4xl block mb-2">hourglass_empty</span>Đang tải...
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script th:replace="~{fragments/layout :: authScript}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const res = await fetch('/api/student/classes');
+            const data = await res.json();
+            const container = document.getElementById('classList');
+            if (data.success && data.data && data.data.length > 0) {
+                container.innerHTML = data.data.map(c => `
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="size-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center"><span class="material-symbols-outlined text-2xl">school</span></div>
+                            <div><h3 class="text-lg font-bold">${c.className}</h3><p class="text-sm text-slate-500">${c.subjectName}</p></div>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex justify-between"><span class="text-slate-500">Giáo viên</span><span class="font-bold">${c.teacherName}</span></div>
+                            <div class="flex justify-between"><span class="text-slate-500">Mã lớp</span><span class="font-mono font-bold text-primary">${c.classCode}</span></div>
+                            <div class="flex justify-between"><span class="text-slate-500">Lịch học</span><span class="font-medium">${c.schedule || '—'}</span></div>
+                        </div>
+                    </div>`).join('');
+            } else {
+                container.innerHTML = '<div class="col-span-full text-center py-12 text-slate-400"><span class="material-symbols-outlined text-5xl block mb-3">school</span>Chưa tham gia lớp nào.<br><a href="/student/join-class" class="text-primary font-bold hover:underline">Nhập mã lớp để tham gia</a></div>';
+            }
+        });
+    </script>
+</body>
+
+</html>

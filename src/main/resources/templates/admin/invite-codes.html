@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+
+<head th:replace="~{fragments/layout :: head('Mã mời Giáo viên')}"></head>
+
+<body>
+    <div class="bg-white text-slate-900 font-display min-h-screen flex overflow-hidden">
+        <!-- Sidebar -->
+        <div th:replace="~{fragments/layout :: sidebar('invite-codes')}"></div>
+
+        <!-- Main area -->
+        <div class="flex-1 flex flex-col h-screen overflow-hidden">
+            <!-- Header -->
+            <div th:replace="~{fragments/layout :: header('Mã mời Giáo viên')}"></div>
+
+            <!-- Content -->
+            <main class="flex-1 overflow-y-auto p-6 lg:p-10 bg-gray-50">
+                <div class="max-w-5xl mx-auto space-y-8">
+                    <!-- Title + Create button -->
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div>
+                            <h2 class="text-3xl font-black text-slate-900 mb-2">Quản lý Mã mời</h2>
+                            <p class="text-lg text-slate-600">Tạo và quản lý mã mời cho giáo viên đăng ký</p>
+                        </div>
+                        <button onclick="createInviteCode()"
+                            class="bg-primary hover:bg-blue-700 text-white font-bold text-lg px-6 py-3 rounded-xl shadow-lg shadow-blue-500/30 flex items-center gap-3 transition-all active:scale-95 cursor-pointer">
+                            <span class="material-symbols-outlined">add_circle</span>
+                            Tạo mã mời
+                        </button>
+                    </div>
+
+                    <!-- Success message -->
+                    <div id="successMsg"
+                        class="hidden p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 text-base font-medium flex items-center gap-3">
+                        <span class="material-symbols-outlined text-emerald-500">check_circle</span>
+                        <span id="successText"></span>
+                        <button onclick="this.parentElement.classList.add('hidden')"
+                            class="ml-auto text-emerald-400 hover:text-emerald-600">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    </div>
+
+                    <!-- Table -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50 text-slate-600 border-b border-slate-200">
+                                        <th class="py-4 px-6 font-bold uppercase text-sm tracking-wider">#</th>
+                                        <th class="py-4 px-6 font-bold uppercase text-sm tracking-wider">Mã mời</th>
+                                        <th class="py-4 px-6 font-bold uppercase text-sm tracking-wider">Hết hạn</th>
+                                        <th class="py-4 px-6 font-bold uppercase text-sm tracking-wider text-center">
+                                            Trạng thái</th>
+                                        <th class="py-4 px-6 font-bold uppercase text-sm tracking-wider">Ngày sử dụng
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="codeTableBody" class="divide-y divide-slate-200">
+                                    <tr>
+                                        <td colspan="5" class="py-12 text-center text-slate-400 text-lg">
+                                            <span
+                                                class="material-symbols-outlined text-4xl block mb-2">hourglass_empty</span>
+                                            Đang tải dữ liệu...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script th:replace="~{fragments/layout :: authScript}"></script>
+    <script>
+        async function loadInviteCodes() {
+            try {
+                const res = await fetch('/api/admin/invite-codes');
+                const data = await res.json();
+                const tbody = document.getElementById('codeTableBody');
+
+                if (data.success && data.data && data.data.length > 0) {
+                    tbody.innerHTML = data.data.map((code, idx) => {
+                        const isUsed = code.used;
+                        const isExpired = new Date(code.expiresAt) < new Date();
+                        let statusBadge = '';
+
+                        if (isUsed) {
+                            statusBadge = '<span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 font-bold text-sm"><span class="material-symbols-outlined text-sm">done</span>Đã dùng</span>';
+                        } else if (isExpired) {
+                            statusBadge = '<span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-red-50 text-red-600 font-bold text-sm"><span class="material-symbols-outlined text-sm">timer_off</span>Hết hạn</span>';
+                        } else if (!code.active) {
+                            statusBadge = '<span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-orange-50 text-orange-600 font-bold text-sm"><span class="material-symbols-outlined text-sm">block</span>Vô hiệu</span>';
+                        } else {
+                            statusBadge = '<span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600 font-bold text-sm"><span class="material-symbols-outlined text-sm">check_circle</span>Sẵn dùng</span>';
+                        }
+
+                        const expiresDate = new Date(code.expiresAt).toLocaleDateString('vi-VN');
+                        const usedDate = code.usedAt ? new Date(code.usedAt).toLocaleDateString('vi-VN') : '—';
+
+                        return `<tr class="hover:bg-slate-50 transition-colors">
+                            <td class="py-4 px-6 text-slate-500 font-medium">${idx + 1}</td>
+                            <td class="py-4 px-6">
+                                <span class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 font-mono text-base font-medium text-slate-700">
+                                    ${code.code}
+                                    <button onclick="copyCode('${code.code}')" class="text-slate-400 hover:text-primary cursor-pointer">
+                                        <span class="material-symbols-outlined text-sm">content_copy</span>
+                                    </button>
+                                </span>
+                            </td>
+                            <td class="py-4 px-6 text-slate-600">${expiresDate}</td>
+                            <td class="py-4 px-6 text-center">${statusBadge}</td>
+                            <td class="py-4 px-6 text-slate-600">${usedDate}</td>
+                        </tr>`;
+                    }).join('');
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="5" class="py-12 text-center text-slate-400 text-lg">
+                        <span class="material-symbols-outlined text-4xl block mb-2">vpn_key_off</span>
+                        Chưa có mã mời nào. Nhấn "Tạo mã mời" để bắt đầu.
+                    </td></tr>`;
+                }
+            } catch (err) {
+                console.error('Load invite codes error:', err);
+            }
+        }
+
+        async function createInviteCode() {
+            try {
+                const res = await fetch('/api/admin/invite-codes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ validDays: 30 })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('successText').textContent = 'Đã tạo mã mời: ' + data.data.code;
+                    document.getElementById('successMsg').classList.remove('hidden');
+                    loadInviteCodes();
+                }
+            } catch (err) {
+                alert('Lỗi khi tạo mã mời');
+            }
+        }
+
+        function copyCode(code) {
+            navigator.clipboard.writeText(code);
+            document.getElementById('successText').textContent = 'Đã copy mã: ' + code;
+            document.getElementById('successMsg').classList.remove('hidden');
+            setTimeout(() => document.getElementById('successMsg').classList.add('hidden'), 2000);
+        }
+
+        document.addEventListener('DOMContentLoaded', loadInviteCodes);
+    </script>
+</body>
+
+</html>

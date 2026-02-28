@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+
+<head th:replace="~{fragments/layout :: head('Lớp học của tôi')}"></head>
+
+<body>
+    <div class="bg-white text-slate-900 font-display min-h-screen flex overflow-hidden">
+        <div th:replace="~{fragments/layout :: sidebar('class')}"></div>
+        <div class="flex-1 flex flex-col h-screen overflow-hidden">
+            <div th:replace="~{fragments/layout :: header('Lớp học của tôi')}"></div>
+            <main class="flex-1 overflow-y-auto p-6 lg:p-10 bg-gray-50">
+                <div class="space-y-8">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div>
+                            <h2 class="text-4xl font-black text-slate-900 mb-2">Lớp học của tôi</h2>
+                            <p class="text-lg text-slate-600">Quản lý các lớp bạn đang dạy</p>
+                        </div>
+                        <button onclick="document.getElementById('createModal').classList.remove('hidden')"
+                            class="bg-primary hover:bg-blue-700 text-white font-bold text-lg px-6 py-3 rounded-xl shadow-lg shadow-blue-500/30 flex items-center gap-3 transition-all active:scale-95 cursor-pointer">
+                            <span class="material-symbols-outlined">add_circle</span> Tạo lớp mới
+                        </button>
+                    </div>
+
+                    <div id="successMsg"
+                        class="hidden p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 font-medium flex items-center gap-3">
+                        <span class="material-symbols-outlined text-emerald-500">check_circle</span>
+                        <span id="successText"></span>
+                    </div>
+
+                    <div id="classList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        <div class="col-span-full text-center py-12 text-slate-400 text-lg">
+                            <span class="material-symbols-outlined text-4xl block mb-2">hourglass_empty</span>Đang
+                            tải...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Create Modal -->
+                <div id="createModal"
+                    class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+                    <div class="w-full max-w-lg bg-white rounded-2xl shadow-2xl">
+                        <div class="p-6 border-b border-slate-200 flex justify-between items-center">
+                            <h3 class="text-2xl font-bold">Tạo lớp mới</h3>
+                            <button onclick="document.getElementById('createModal').classList.add('hidden')"
+                                class="text-slate-400 hover:text-slate-600">
+                                <span class="material-symbols-outlined">close</span></button>
+                        </div>
+                        <form id="createForm" class="p-6 space-y-4">
+                            <div><label class="block font-bold mb-1">Tên lớp *</label>
+                                <input id="cName"
+                                    class="w-full h-12 px-4 rounded-lg border border-slate-300 bg-slate-50 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                    placeholder="Toán 10A - Nâng cao" required />
+                            </div>
+                            <div><label class="block font-bold mb-1">Môn học *</label>
+                                <select id="cSubject"
+                                    class="w-full h-12 px-4 rounded-lg border border-slate-300 bg-slate-50 focus:border-primary"
+                                    required>
+                                    <option value="">Chọn môn học</option>
+                                </select>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div><label class="block font-bold mb-1">Sĩ số tối đa</label>
+                                    <input id="cMax" type="number" value="30"
+                                        class="w-full h-12 px-4 rounded-lg border border-slate-300 bg-slate-50" />
+                                </div>
+                                <div><label class="block font-bold mb-1">Học phí/tháng (VNĐ)</label>
+                                    <input id="cFee" type="number" value="500000"
+                                        class="w-full h-12 px-4 rounded-lg border border-slate-300 bg-slate-50" />
+                                </div>
+                            </div>
+                            <div><label class="block font-bold mb-1">Lịch học</label>
+                                <input id="cSchedule"
+                                    class="w-full h-12 px-4 rounded-lg border border-slate-300 bg-slate-50"
+                                    placeholder="T2-T4-T6 18:00-20:00" />
+                            </div>
+                            <button type="submit"
+                                class="w-full h-12 bg-primary hover:bg-blue-700 text-white font-bold rounded-lg cursor-pointer">Tạo
+                                lớp</button>
+                        </form>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script th:replace="~{fragments/layout :: authScript}"></script>
+    <script>
+        async function loadSubjects() {
+            const res = await fetch('/api/subjects');
+            const data = await res.json();
+            const sel = document.getElementById('cSubject');
+            if (data.success && data.data) {
+                data.data.forEach(s => { const o = document.createElement('option'); o.value = s.id; o.textContent = s.name + ' (' + s.code + ')'; sel.appendChild(o); });
+            }
+        }
+
+        async function loadClasses() {
+            const res = await fetch('/api/teacher/classes');
+            const data = await res.json();
+            const container = document.getElementById('classList');
+            if (data.success && data.data && data.data.length > 0) {
+                container.innerHTML = data.data.map(c => `
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="size-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center"><span class="material-symbols-outlined text-2xl">school</span></div>
+                            <div><h3 class="text-lg font-bold text-slate-900">${c.name}</h3><p class="text-sm text-slate-500">${c.subjectName}</p></div>
+                        </div>
+                        <div class="space-y-2 mb-4">
+                            <div class="flex justify-between text-base"><span class="text-slate-500">Mã lớp</span><span class="font-mono font-bold text-primary">${c.classCode}</span></div>
+                            <div class="flex justify-between text-base"><span class="text-slate-500">Sĩ số</span><span class="font-bold">${c.studentCount}/${c.maxStudents}</span></div>
+                            <div class="flex justify-between text-base"><span class="text-slate-500">Lịch</span><span class="font-medium">${c.schedule || '—'}</span></div>
+                            <div class="flex justify-between text-base"><span class="text-slate-500">Học phí</span><span class="font-bold text-emerald-600">${Number(c.tuitionFee).toLocaleString('vi-VN')}đ</span></div>
+                        </div>
+                        <a href="/teacher/classes/${c.id}" class="w-full flex items-center justify-center gap-2 h-10 rounded-lg border border-slate-300 text-slate-700 font-bold hover:bg-slate-50 transition-colors">
+                            <span class="material-symbols-outlined text-lg">settings</span> Quản lý</a>
+                    </div>`).join('');
+            } else {
+                container.innerHTML = '<div class="col-span-full text-center py-12 text-slate-400 text-lg"><span class="material-symbols-outlined text-5xl block mb-3">school</span>Chưa có lớp nào. Bấm "Tạo lớp mới" để bắt đầu!</div>';
+            }
+        }
+
+        document.getElementById('createForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            const res = await fetch('/api/teacher/classes', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: document.getElementById('cName').value, subjectId: parseInt(document.getElementById('cSubject').value), maxStudents: parseInt(document.getElementById('cMax').value), tuitionFee: parseInt(document.getElementById('cFee').value), schedule: document.getElementById('cSchedule').value })
+            });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('createModal').classList.add('hidden');
+                document.getElementById('successText').textContent = 'Tạo lớp thành công! Mã lớp: ' + data.data.classCode;
+                document.getElementById('successMsg').classList.remove('hidden');
+                loadClasses();
+            } else { alert(data.message); }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => { loadSubjects(); loadClasses(); });
+    </script>
+</body>
+
+</html>

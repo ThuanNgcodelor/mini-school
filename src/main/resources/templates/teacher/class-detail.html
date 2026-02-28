@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+
+<head th:replace="~{fragments/layout :: head('Chi tiết lớp')}"></head>
+
+<body>
+    <div class="bg-white text-slate-900 font-display min-h-screen flex overflow-hidden">
+        <div th:replace="~{fragments/layout :: sidebar('class')}"></div>
+        <div class="flex-1 flex flex-col h-screen overflow-hidden">
+            <div th:replace="~{fragments/layout :: header('Chi tiết lớp')}"></div>
+            <main class="flex-1 overflow-y-auto p-4 lg:p-10 bg-gray-50">
+                <div class="space-y-6 lg:space-y-8">
+                    <!-- Class Info -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 lg:p-6">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                                <h2 class="text-2xl lg:text-3xl font-black text-slate-900" id="className">Đang tải...
+                                </h2>
+                                <div
+                                    class="flex flex-wrap items-center gap-2 lg:gap-4 mt-2 text-sm lg:text-base text-slate-500">
+                                    <span id="classSubject"></span><span>|</span>
+                                    <span class="font-mono font-bold text-primary" id="classCode"></span><span>|</span>
+                                    <span id="classSchedule"></span>
+                                </div>
+                            </div>
+                            <div class="flex gap-2 lg:gap-3">
+                                <button onclick="openEditClassModal()"
+                                    class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 lg:px-5 py-2.5 lg:py-3 rounded-xl flex items-center gap-2 cursor-pointer transition-all text-sm lg:text-base">
+                                    <span class="material-symbols-outlined text-lg">edit</span><span
+                                        class="hidden sm:inline">Sửa lớp</span>
+                                </button>
+                                <a id="addStudentsBtn"
+                                    class="bg-primary hover:bg-blue-700 text-white font-bold px-3 lg:px-5 py-2.5 lg:py-3 rounded-xl shadow-lg flex items-center gap-2 cursor-pointer transition-all active:scale-95 text-sm lg:text-base">
+                                    <span class="material-symbols-outlined text-lg">person_add</span><span
+                                        class="hidden sm:inline">Thêm HS</span>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 lg:grid-cols-5 gap-3 lg:gap-4 mt-5">
+                            <div class="bg-blue-50 p-3 lg:p-4 rounded-xl text-center">
+                                <p class="text-xs lg:text-sm text-slate-500">Sĩ số</p>
+                                <p class="text-xl lg:text-2xl font-black text-primary" id="statCount">0</p>
+                            </div>
+                            <div class="bg-emerald-50 p-3 lg:p-4 rounded-xl text-center">
+                                <p class="text-xs lg:text-sm text-slate-500">Tối đa</p>
+                                <p class="text-xl lg:text-2xl font-black text-emerald-600" id="statMax">30</p>
+                            </div>
+                            <div class="bg-orange-50 p-3 lg:p-4 rounded-xl text-center">
+                                <p class="text-xs lg:text-sm text-slate-500">Học phí</p>
+                                <p class="text-xl lg:text-2xl font-black text-orange-600" id="statFee">0đ</p>
+                            </div>
+                            <div class="bg-purple-50 p-3 lg:p-4 rounded-xl text-center hidden lg:block">
+                                <p class="text-xs lg:text-sm text-slate-500">Trạng thái</p>
+                                <p class="text-xl lg:text-2xl font-black text-purple-600" id="statStatus">---</p>
+                            </div>
+                            <a id="paymentLink"
+                                class="bg-yellow-50 p-3 lg:p-4 rounded-xl text-center hover:bg-yellow-100 transition-colors cursor-pointer block">
+                                <p class="text-xs lg:text-sm text-slate-500">Học phí</p>
+                                <p
+                                    class="text-xl lg:text-2xl font-black text-yellow-600 flex items-center justify-center gap-1">
+                                    <span class="material-symbols-outlined text-lg lg:text-2xl">payments</span> Xem</p>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div id="msgBox"
+                        class="hidden p-3 lg:p-4 rounded-xl font-medium flex items-center gap-2 text-sm lg:text-base">
+                    </div>
+
+                    <!-- Student List -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div
+                            class="p-4 lg:p-6 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <h3 class="text-lg lg:text-xl font-bold flex items-center gap-2"><span
+                                    class="material-symbols-outlined text-primary">groups</span> Danh sách học sinh</h3>
+                            <!-- Search -->
+                            <div class="relative w-full sm:w-72">
+                                <span
+                                    class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
+                                <input id="searchInput" type="text" placeholder="Tìm tên, mã HS, SĐT..."
+                                    class="w-full h-10 pl-10 pr-4 rounded-lg border border-slate-300 bg-slate-50 focus:border-primary focus:ring-2 focus:ring-primary/20 text-sm" />
+                            </div>
+                        </div>
+
+                        <!-- Desktop table -->
+                        <div class="hidden lg:block overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-200">
+                                        <th class="py-4 px-6 text-sm font-bold uppercase tracking-wider text-slate-600">
+                                            #</th>
+                                        <th class="py-4 px-6 text-sm font-bold uppercase tracking-wider text-slate-600">
+                                            Mã HS</th>
+                                        <th class="py-4 px-6 text-sm font-bold uppercase tracking-wider text-slate-600">
+                                            Họ tên</th>
+                                        <th class="py-4 px-6 text-sm font-bold uppercase tracking-wider text-slate-600">
+                                            SĐT</th>
+                                        <th class="py-4 px-6 text-sm font-bold uppercase tracking-wider text-slate-600">
+                                            Phụ huynh</th>
+                                        <th
+                                            class="py-4 px-6 text-sm font-bold uppercase tracking-wider text-slate-600 text-right">
+                                            Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="studentTable" class="divide-y divide-slate-200"></tbody>
+                            </table>
+                        </div>
+
+                        <!-- Mobile cards -->
+                        <div id="studentCards" class="lg:hidden divide-y divide-slate-100"></div>
+
+                        <!-- Pagination -->
+                        <div id="pagination"
+                            class="hidden p-4 border-t border-slate-200 flex items-center justify-between">
+                            <p class="text-sm text-slate-500" id="pageInfo"></p>
+                            <div class="flex gap-1" id="pageButtons"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Edit Class Modal -->
+                <div id="editClassModal"
+                    class="hidden fixed inset-0 z-50 flex items-end lg:items-center justify-center p-0 lg:p-4 bg-slate-900/50 backdrop-blur-sm">
+                    <div class="w-full max-w-lg bg-white rounded-t-2xl lg:rounded-2xl shadow-2xl">
+                        <div class="p-5 lg:p-6 border-b flex justify-between items-center">
+                            <h3 class="text-xl lg:text-2xl font-bold">Sửa thông tin lớp</h3>
+                            <button onclick="closeEditClassModal()"
+                                class="text-slate-400 hover:text-slate-600 cursor-pointer"><span
+                                    class="material-symbols-outlined">close</span></button>
+                        </div>
+                        <form id="editClassForm" class="p-5 lg:p-6 space-y-4">
+                            <div><label class="block font-bold mb-1 text-sm">Tên lớp</label><input id="eName"
+                                    class="w-full h-11 px-4 rounded-lg border border-slate-300 bg-slate-50 focus:border-primary text-sm" />
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div><label class="block font-bold mb-1 text-sm">Sĩ số tối đa</label><input id="eMax"
+                                        type="number"
+                                        class="w-full h-11 px-4 rounded-lg border border-slate-300 bg-slate-50 text-sm" />
+                                </div>
+                                <div><label class="block font-bold mb-1 text-sm">Học phí/tháng</label><input id="eFee"
+                                        type="number"
+                                        class="w-full h-11 px-4 rounded-lg border border-slate-300 bg-slate-50 text-sm" />
+                                </div>
+                            </div>
+                            <div><label class="block font-bold mb-1 text-sm">Lịch học</label><input id="eSchedule"
+                                    class="w-full h-11 px-4 rounded-lg border border-slate-300 bg-slate-50 text-sm" />
+                            </div>
+                            <button type="submit"
+                                class="w-full h-11 bg-primary hover:bg-blue-700 text-white font-bold rounded-lg cursor-pointer text-sm">Lưu
+                                thay đổi</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Edit Student Modal -->
+                <div id="editStudentModal"
+                    class="hidden fixed inset-0 z-50 flex items-end lg:items-center justify-center p-0 lg:p-4 bg-slate-900/50 backdrop-blur-sm">
+                    <div class="w-full max-w-lg bg-white rounded-t-2xl lg:rounded-2xl shadow-2xl">
+                        <div class="p-5 lg:p-6 border-b flex justify-between items-center">
+                            <h3 class="text-xl lg:text-2xl font-bold">Sửa thông tin học sinh</h3>
+                            <button onclick="closeEditStudentModal()"
+                                class="text-slate-400 hover:text-slate-600 cursor-pointer"><span
+                                    class="material-symbols-outlined">close</span></button>
+                        </div>
+                        <form id="editStudentForm" class="p-5 lg:p-6 space-y-4">
+                            <input type="hidden" id="esStudentId" />
+                            <div><label class="block font-bold mb-1 text-sm">Họ tên học sinh</label><input id="esName"
+                                    class="w-full h-11 px-4 rounded-lg border border-slate-300 bg-slate-50 focus:border-primary text-sm"
+                                    required /></div>
+                            <div><label class="block font-bold mb-1 text-sm">SĐT học sinh</label><input id="esPhone"
+                                    class="w-full h-11 px-4 rounded-lg border border-slate-300 bg-slate-50 text-sm"
+                                    required /></div>
+                            <div><label class="block font-bold mb-1 text-sm">Tên phụ huynh</label><input
+                                    id="esParentName"
+                                    class="w-full h-11 px-4 rounded-lg border border-slate-300 bg-slate-50 text-sm"
+                                    placeholder="(tuỳ chọn)" /></div>
+                            <div><label class="block font-bold mb-1 text-sm">SĐT phụ huynh</label><input
+                                    id="esParentPhone"
+                                    class="w-full h-11 px-4 rounded-lg border border-slate-300 bg-slate-50 text-sm"
+                                    placeholder="(tuỳ chọn)" /></div>
+                            <button type="submit"
+                                class="w-full h-11 bg-primary hover:bg-blue-700 text-white font-bold rounded-lg cursor-pointer text-sm">Lưu
+                                thay đổi</button>
+                        </form>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script th:replace="~{fragments/layout :: authScript}"></script>
+    <script>
+        const classId = window.location.pathname.split('/').filter(Boolean).pop();
+        let classData = null;
+        let allStudents = [];
+        let currentPage = 1;
+        const PAGE_SIZE = 20;
+
+        function showMsg(text, ok) {
+            const el = document.getElementById('msgBox');
+            el.className = ok ? 'p-3 lg:p-4 rounded-xl font-medium flex items-center gap-2 text-sm lg:text-base bg-emerald-50 border border-emerald-200 text-emerald-700' : 'p-3 lg:p-4 rounded-xl font-medium flex items-center gap-2 text-sm lg:text-base bg-red-50 border border-red-200 text-red-700';
+            el.innerHTML = `<span class="material-symbols-outlined">${ok ? 'check_circle' : 'error'}</span>${text}`;
+            setTimeout(() => el.classList.add('hidden'), 3000);
+        }
+
+        function getSearchQuery() {
+            return (document.getElementById('searchInput').value || '').toLowerCase().trim();
+        }
+
+        function getFilteredStudents() {
+            const q = getSearchQuery();
+            if (!q) return allStudents;
+            return allStudents.filter(s =>
+                s.fullName.toLowerCase().includes(q) ||
+                s.studentCode.toLowerCase().includes(q) ||
+                (s.phone && s.phone.includes(q)) ||
+                (s.parentName && s.parentName.toLowerCase().includes(q))
+            );
+        }
+
+        function renderStudents() {
+            const filtered = getFilteredStudents();
+            const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+            if (currentPage > totalPages) currentPage = totalPages;
+            const start = (currentPage - 1) * PAGE_SIZE;
+            const pageStudents = filtered.slice(start, start + PAGE_SIZE);
+
+            // Desktop table
+            const tbody = document.getElementById('studentTable');
+            if (pageStudents.length > 0) {
+                tbody.innerHTML = pageStudents.map((s, i) => `<tr class="hover:bg-slate-50">
+                    <td class="py-4 px-6 text-slate-500">${start + i + 1}</td>
+                    <td class="py-4 px-6 font-mono text-sm font-medium">${s.studentCode}</td>
+                    <td class="py-4 px-6 font-bold">${s.fullName}</td>
+                    <td class="py-4 px-6">${s.phone}</td>
+                    <td class="py-4 px-6"><span class="text-sm">${s.parentName || '—'}</span>${s.parentPhone ? '<br><span class="text-xs text-slate-400">' + s.parentPhone + '</span>' : ''}</td>
+                    <td class="py-4 px-6 text-right space-x-2">
+                        <button onclick="openEditStudent(${s.studentId}, '${s.fullName.replace(/'/g, "\\'")}', '${s.phone}', '${(s.parentName || '').replace(/'/g, "\\'")}', '${s.parentPhone || ''}')" class="text-primary hover:bg-primary/10 px-3 py-1 rounded-lg text-sm font-medium cursor-pointer">Sửa</button>
+                        <button onclick="removeStudent(${s.studentId})" class="text-red-500 hover:bg-red-50 px-3 py-1 rounded-lg text-sm font-medium cursor-pointer">Xóa</button>
+                    </td>
+                </tr>`).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="6" class="py-12 text-center text-slate-400"><span class="material-symbols-outlined text-4xl block mb-2">group_off</span>' + (getSearchQuery() ? 'Không tìm thấy kết quả' : 'Chưa có học sinh') + '</td></tr>';
+            }
+
+            // Mobile cards
+            const cards = document.getElementById('studentCards');
+            if (pageStudents.length > 0) {
+                cards.innerHTML = pageStudents.map((s, i) => `<div class="p-4 flex items-center justify-between gap-3">
+                    <div class="flex-1 min-w-0">
+                        <p class="font-bold text-base truncate">${s.fullName}</p>
+                        <p class="text-xs text-slate-400 font-mono">${s.studentCode} · ${s.phone}</p>
+                        ${s.parentName ? '<p class="text-xs text-slate-500 mt-0.5">PH: ' + s.parentName + (s.parentPhone ? ' · ' + s.parentPhone : '') + '</p>' : ''}
+                    </div>
+                    <div class="flex gap-1 flex-shrink-0">
+                        <button onclick="openEditStudent(${s.studentId}, '${s.fullName.replace(/'/g, "\\'")}', '${s.phone}', '${(s.parentName || '').replace(/'/g, "\\'")}', '${s.parentPhone || ''}')" class="text-primary p-2 rounded-lg hover:bg-primary/10 cursor-pointer"><span class="material-symbols-outlined text-xl">edit</span></button>
+                        <button onclick="removeStudent(${s.studentId})" class="text-red-500 p-2 rounded-lg hover:bg-red-50 cursor-pointer"><span class="material-symbols-outlined text-xl">delete</span></button>
+                    </div>
+                </div>`).join('');
+            } else {
+                cards.innerHTML = `<p class="py-12 text-center text-slate-400">${getSearchQuery() ? 'Không tìm thấy kết quả' : 'Chưa có học sinh'}</p>`;
+            }
+
+            // Pagination
+            const pag = document.getElementById('pagination');
+            if (filtered.length > PAGE_SIZE) {
+                pag.classList.remove('hidden');
+                document.getElementById('pageInfo').textContent = `Trang ${currentPage}/${totalPages} (${filtered.length} HS)`;
+                let btns = '';
+                btns += `<button onclick="goPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="px-3 py-1.5 rounded-lg border text-sm font-bold ${currentPage === 1 ? 'text-slate-300 border-slate-200' : 'text-slate-600 border-slate-300 hover:bg-slate-50 cursor-pointer'}">‹</button>`;
+                for (let p = 1; p <= totalPages; p++) {
+                    if (totalPages > 7 && Math.abs(p - currentPage) > 2 && p !== 1 && p !== totalPages) {
+                        if (p === 2 || p === totalPages - 1) btns += `<span class="px-1 text-slate-400">…</span>`;
+                        continue;
+                    }
+                    btns += `<button onclick="goPage(${p})" class="px-3 py-1.5 rounded-lg border text-sm font-bold ${p === currentPage ? 'bg-primary text-white border-primary' : 'text-slate-600 border-slate-300 hover:bg-slate-50 cursor-pointer'}">${p}</button>`;
+                }
+                btns += `<button onclick="goPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="px-3 py-1.5 rounded-lg border text-sm font-bold ${currentPage === totalPages ? 'text-slate-300 border-slate-200' : 'text-slate-600 border-slate-300 hover:bg-slate-50 cursor-pointer'}">›</button>`;
+                document.getElementById('pageButtons').innerHTML = btns;
+            } else {
+                pag.classList.add('hidden');
+            }
+        }
+
+        function goPage(p) {
+            const filtered = getFilteredStudents();
+            const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+            if (p < 1 || p > totalPages) return;
+            currentPage = p;
+            renderStudents();
+        }
+
+        async function loadClassDetail() {
+            const res = await fetch('/api/teacher/classes/' + classId);
+            const data = await res.json();
+            if (!data.success) { alert(data.message); return; }
+            classData = data.data;
+            const c = classData;
+            document.getElementById('className').textContent = c.name;
+            document.getElementById('classSubject').textContent = c.subjectName;
+            document.getElementById('classCode').textContent = c.classCode;
+            document.getElementById('classSchedule').textContent = c.schedule || '—';
+            document.getElementById('statCount').textContent = c.studentCount;
+            document.getElementById('statMax').textContent = c.maxStudents;
+            document.getElementById('statFee').textContent = Number(c.tuitionFee).toLocaleString('vi-VN') + 'đ';
+            document.getElementById('statStatus').textContent = c.status === 'ACTIVE' ? 'Đang mở' : 'Đã đóng';
+            document.getElementById('addStudentsBtn').href = '/teacher/classes/' + classId + '/add-students';
+            document.getElementById('paymentLink').href = '/teacher/classes/' + classId + '/payments';
+
+            allStudents = c.students || [];
+            currentPage = 1;
+            renderStudents();
+        }
+
+        async function removeStudent(studentId) {
+            if (!confirm('Xóa học sinh khỏi lớp?')) return;
+            const res = await fetch('/api/teacher/classes/' + classId + '/remove/' + studentId, { method: 'POST' });
+            const data = await res.json();
+            showMsg(data.message, data.success);
+            if (data.success) loadClassDetail();
+        }
+
+        // ── Edit Student ──
+        function openEditStudent(id, name, phone, parentName, parentPhone) {
+            document.getElementById('esStudentId').value = id;
+            document.getElementById('esName').value = name;
+            document.getElementById('esPhone').value = phone;
+            document.getElementById('esParentName').value = parentName;
+            document.getElementById('esParentPhone').value = parentPhone;
+            document.getElementById('editStudentModal').classList.remove('hidden');
+        }
+        function closeEditStudentModal() { document.getElementById('editStudentModal').classList.add('hidden'); }
+
+        document.getElementById('editStudentForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            const studentId = document.getElementById('esStudentId').value;
+            const res = await fetch('/api/teacher/classes/' + classId + '/students/' + studentId, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    fullName: document.getElementById('esName').value,
+                    phone: document.getElementById('esPhone').value,
+                    parentName: document.getElementById('esParentName').value,
+                    parentPhone: document.getElementById('esParentPhone').value,
+                })
+            });
+            const data = await res.json();
+            closeEditStudentModal();
+            showMsg(data.message, data.success);
+            if (data.success) loadClassDetail();
+        });
+
+        // ── Edit Class ──
+        function openEditClassModal() {
+            if (!classData) return;
+            document.getElementById('eName').value = classData.name;
+            document.getElementById('eMax').value = classData.maxStudents;
+            document.getElementById('eFee').value = classData.tuitionFee;
+            document.getElementById('eSchedule').value = classData.schedule || '';
+            document.getElementById('editClassModal').classList.remove('hidden');
+        }
+        function closeEditClassModal() { document.getElementById('editClassModal').classList.add('hidden'); }
+
+        document.getElementById('editClassForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            const res = await fetch('/api/teacher/classes/' + classId, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: document.getElementById('eName').value,
+                    maxStudents: parseInt(document.getElementById('eMax').value),
+                    tuitionFee: parseInt(document.getElementById('eFee').value),
+                    schedule: document.getElementById('eSchedule').value
+                })
+            });
+            const data = await res.json();
+            closeEditClassModal();
+            showMsg(data.message, data.success);
+            if (data.success) loadClassDetail();
+        });
+
+        // ── Search with debounce ──
+        let searchTimer;
+        document.getElementById('searchInput').addEventListener('input', () => {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => { currentPage = 1; renderStudents(); }, 300);
+        });
+
+        document.addEventListener('DOMContentLoaded', loadClassDetail);
+    </script>
+</body>
+
+</html>
