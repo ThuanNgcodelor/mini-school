@@ -1,0 +1,9 @@
+tunnel: mini-school
+credentials-file: C:\Users\nguye\.cloudflared\bc05b22a-a34f-462e-8396-79073eb0d56c.json
+
+ingress:
+  - hostname: shopee-fake.id.vn
+    service: http://localhost:8080
+  - hostname: "*.shopee-fake.id.vn"
+    service: http://localhost:8080
+  - service: http_status:404

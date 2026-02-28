@@ -1,0 +1,25 @@
+# Cloudflare Tunnel Configuration
+# Connects localhost:8080 to shopee-fake.id.vn
+# 
+# Tunnel ID: bc05b22a-a34f-462e-8396-79073eb0d56c
+# Created: 2026-02-28
+#
+# Cách chạy:
+#   1. Đảm bảo Spring Boot đang chạy trên localhost:8080
+#   2. cloudflared tunnel route dns mini-school shopee-fake.id.vn
+#   3. cloudflared tunnel --config d:\Spring\mini-school\cloudflared-config.yml run mini-school
+#
+# Cài đặt cloudflared:
+#   winget install --id Cloudflare.cloudflared
+#   cloudflared tunnel login
+#   cloudflared tunnel create mini-school
+
+tunnel: mini-school
+credentials-file: C:\Users\nguye\.cloudflared\bc05b22a-a34f-462e-8396-79073eb0d56c.json
+
+ingress:
+  - hostname: shopee-fake.id.vn
+    service: http://localhost:8080
+  - hostname: "*.shopee-fake.id.vn"
+    service: http://localhost:8080
+  - service: http_status:404
